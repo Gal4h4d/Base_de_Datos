@@ -1,0 +1,235 @@
+--Cree un procedimiento que permita crear una vista de todas las tareas que tiene asociada una categoría de tareas.
+
+select * FROM tasks
+select * FROM priorities 
+select * FROM users,tasks
+
+CREATE OR REPLACE PROCEDURE crear_vista_por_prioridad(nombre_prioridad TEXT)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    id_prioridad INT;
+    nombre_vista TEXT;
+BEGIN
+    SELECT pid INTO id_prioridad
+    FROM priorities
+    WHERE p_name = nombre_prioridad;
+
+    IF NOT FOUND THEN
+        RAISE NOTICE 'Prioridad no encontrada.';
+        RETURN;
+    END IF;
+
+    nombre_vista := 'vista_tareas_prioridad_' || id_prioridad;
+
+    EXECUTE format('
+        CREATE OR REPLACE VIEW %I AS
+        SELECT t.tid, t.title, t.summary, t.status, t.created_date, t.limit_date
+        FROM tasks t
+        WHERE t.pid = %L;',
+        nombre_vista, id_prioridad);
+
+    RAISE NOTICE 'Vista % creada correctamente.', nombre_vista;
+END;
+$$;
+
+CALL crear_vista_por_prioridad('alta');
+
+SELECT * FROM vista_tareas_prioridad_3;
+
+
+
+--Cree una vista materializada con usuarios que tengan tareas pendientes- 
+
+
+
+CREATE MATERIALIZED VIEW vista_usuarios_con_tareas_pendientes AS
+SELECT DISTINCT u.uid, u.name, u.email, u.register_date
+FROM users u
+JOIN tasks t ON u.uid = t.uid
+WHERE t.status = 'pendiente';
+
+REFRESH MATERIALIZED VIEW vista_usuarios_con_tareas_pendientes;
+SELECT * FROM vista_usuarios_con_tareas_pendientes;
+
+
+--Cree una transacción que permita cerrar las tareas que ya ha expirado por fecha--
+BEGIN;
+UPDATE tasks
+SET status = 'Cerrada'
+WHERE limit_date < CURRENT_DATE AND status != 'Cerrada';
+COMMIT;
+--ROLLBACK;
+
+--Cree una transacción que permita clonar las tareas y sean asignadas a otro usuario 
+
+BEGIN;
+INSERT INTO tasks (title, summary, status, created_date, limit_date, uid, pid)
+SELECT title, summary, status, CURRENT_DATE, limit_date, 2, pid
+FROM tasks
+WHERE uid = 1;
+COMMIT;
+
+--Cree una tabla temporal con toda la información de las tareas.
+
+CREATE TEMP TABLE temp_tasks AS
+SELECT * FROM tasks;
+SELECT * FROM temp_tasks;
+
+-- Cree un procedimiento que permita llenar cualquier tabla en cualquier base de datos utilizando los ciclos. CREATE OR REPLACE PROCEDURE insertar_dat
+
+CREATE OR REPLACE PROCEDURE insertar_datos(
+    nombre_tabla TEXT,
+    columnas TEXT,
+    valores TEXT,
+    repeticiones INTEGER
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    i INTEGER := 0;
+    sql_comando TEXT;
+BEGIN
+    WHILE i < repeticiones LOOP
+        sql_comando := FORMAT('INSERT INTO %I (%s) VALUES (%s);', nombre_tabla, columnas, valores);
+        EXECUTE sql_comando;
+        i := i + 1;
+    END LOOP;
+END;
+$$;
+
+CALL insertar_datos(
+    'tasks',
+    'title, summary, status, created_date, limit_date, uid, pid',
+    '''Tarea de prueba'', ''Resumen de prueba'', ''pendiente'', CURRENT_DATE, NULL, 2, 1',
+    3
+);
+
+
+
+
+--Funcion para tener los usuarios con tareas
+
+CREATE OR REPLACE FUNCTION obtener_usuarios_con_tareas()
+RETURNS TABLE(nombre_usuario TEXT, titulo_tarea TEXT)
+LANGUAGE sql
+AS $$
+    SELECT u.name, t.title
+    FROM users u
+    JOIN tasks t ON u.uid = t.uid;
+$$;
+CALL obtener_usuarios_con_tareas();
+
+--Cree un procedimiento que recorra todas las tareas y concatena las etiquetas y la prioridad quedando --de la siguiente manera, puede utilizar o modificar el ejercicio anterior para esto --#No - Nombre Completo - Tareas - Prioridad – Tags
+
+CREATE OR REPLACE PROCEDURE listar_tareas_completas()
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    tarea RECORD;
+    etiquetas_texto TEXT;
+BEGIN
+    FOR tarea IN
+        SELECT t.tid, u.name AS nombre_usuario, t.title AS titulo_tarea, p.p_name AS prioridad
+        FROM tasks t
+        JOIN users u ON t.uid = u.uid
+        JOIN priorities p ON t.pid = p.pid
+    LOOP
+        SELECT STRING_AGG(tags.tg_name, ', ')
+        INTO etiquetas_texto
+        FROM task_tags
+        JOIN tags ON tags.tgid = task_tags.tgid
+        WHERE task_tags.tid = tarea.tid;
+
+        RAISE NOTICE '#% - % - % - % - %',
+            tarea.tid,
+            tarea.nombre_usuario,
+            tarea.titulo_tarea,
+            tarea.prioridad,
+            COALESCE(etiquetas_texto, 'Sin etiquetas');
+    END LOOP;
+END;
+$$;
+CALL listar_tareas_completas();
+
+
+
+
+
+
+
+
+
+
+
+--* Elabore un procedimiento que permita la construcción de vistas normales o materializadas, el --procedimiento debe permitir crear cualquiera de estos dos tipos de vista con cualquier tipo de --información. De un ejemplo de ejecución del procedimiento teniendo en cuenta el ejercicio todolist. --Utilizar CASE 
+
+CREATE OR REPLACE PROCEDURE crear_vistas()
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    i INT := 1;
+    tipo_vista TEXT;
+    nombre_vista TEXT;
+    consulta_sql TEXT;
+BEGIN
+    WHILE i <= 2 LOOP
+        tipo_vista := CASE i
+            WHEN 1 THEN 'NORMAL'
+            WHEN 2 THEN 'MATERIALIZADA'
+            ELSE 'NORMAL'
+        END;
+
+        nombre_vista := 'vista_tareas_' || i;
+
+        consulta_sql := '
+            SELECT tid, title, summary, pid,
+                CASE
+                    WHEN pid = 3 THEN ''alta''
+                    WHEN pid = 2 THEN ''media''
+                    ELSE ''baja''
+                END AS categoria_prioridad
+            FROM tasks
+            WHERE status = ' || CASE
+                WHEN i = 1 THEN '''pendiente'''
+                WHEN i = 2 THEN '''completada'''
+                ELSE '''pendiente'''
+            END || '
+            ORDER BY pid DESC
+        ';
+
+        CASE tipo_vista
+            WHEN 'NORMAL' THEN
+                EXECUTE FORMAT('CREATE OR REPLACE VIEW %I AS %s', nombre_vista, consulta_sql);
+                RAISE NOTICE 'Vista normal creada: %', nombre_vista;
+            WHEN 'MATERIALIZADA' THEN
+                EXECUTE FORMAT('CREATE MATERIALIZED VIEW %I AS %s', nombre_vista, consulta_sql);
+                RAISE NOTICE 'Vista materializada creada: %', nombre_vista;
+        END CASE;
+
+        i := i + 1;
+    END LOOP;
+END;
+$$;
+
+CALL crear_vistas();
+
+
+
+--prcedimiento para clonar cualquier tabla
+
+CREATE OR REPLACE PROCEDURE clonar_tabla_temporal(nombre_tabla TEXT)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    nombre_temp TEXT;
+BEGIN
+    nombre_temp := 'temp_' || nombre_tabla;
+    EXECUTE FORMAT('DROP TABLE IF EXISTS %I', nombre_temp);
+    EXECUTE FORMAT('CREATE TEMP TABLE %I AS TABLE %I', nombre_temp, nombre_tabla);
+    RAISE NOTICE 'Tabla temporal creada: %', nombre_temp;
+END;
+$$;
+
+CALL clonar_tabla_temporal('tasks');
+SELECT * FROM temp_tasks;

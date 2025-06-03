@@ -1,0 +1,42 @@
+--Transferir una tarea de un usuario a otro usuario.
+BEGIN;
+
+UPDATE tasks
+SET uid = 3
+WHERE tid = 6;
+
+COMMIT;
+
+--Clonar una tarea incluyendo sus etiquetas.
+
+BEGIN;
+
+INSERT INTO tasks (title, summary, status, created_date, limit_date, uid, pid)
+SELECT title, summary, status, created_date, limit_date, uid, pid
+FROM tasks
+WHERE tid = 7
+RETURNING tid INTO TEMP nueva_tid;
+
+
+INSERT INTO task_tags (tid, tgid)
+SELECT (SELECT tid FROM tasks ORDER BY tid DESC LIMIT 1), tgid
+FROM task_tags
+WHERE tid = 7;
+
+COMMIT;
+
+
+
+--  Crear una tabla temporal con todas las tareas de prioridad media y mostrar el nombre de la prioridad dentro de una transacción.
+
+BEGIN;
+
+CREATE TEMPORARY TABLE tareas_prioridad_media AS
+SELECT t.*, p.p_name AS prioridad
+FROM tasks t
+JOIN priorities p ON t.pid = p.pid
+WHERE p.p_name = 'media';
+
+SELECT * FROM tareas_prioridad_media;
+
+COMMIT;
