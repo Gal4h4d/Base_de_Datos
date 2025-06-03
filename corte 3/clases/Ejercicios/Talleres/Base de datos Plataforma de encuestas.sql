@@ -98,6 +98,53 @@ CONSTRAINT pk_estadistica PRIMARY KEY (id_estadistica)
 
 );
 
+-- Insertar usuarios en la base de datos 
+--(se me olvido el nombre de la pagina de donde genera los datos para las tablas)
+
+INSERT INTO usuario (id_usuario, username, email, contraseña, fecha_registro) VALUES
+(1, 'jgarcia', 'jgarcia@email.com', 'password123', '2025-06-01'),
+(2, 'mlopez', 'mlopez@email.com', 'securepass', '2025-06-02'),
+(3, 'cruiz', 'cruiz@email.com', 'hashkey!', '2025-06-03'),
+(4, 'apatino', 'apatino@email.com', 'encryptme', '2025-06-04'),
+(5, 'bfernandez', 'bfernandez@email.com', 'secretcode', '2025-06-05');
+
+-- Insertar encuestas
+INSERT INTO encuesta (id_encuesta, id_usuario, titulo, descripcion, fecha_creacion, activa) VALUES
+(1, 1, 'Preferencias de Redes Sociales', 'Encuesta sobre las redes sociales más populares.', '2025-06-01', TRUE),
+(2, 2, 'Hábitos de Consumo', 'Estudio sobre hábitos de compra en línea.', '2025-06-02', TRUE),
+(3, 3, 'Ejercicio Diario', 'Frecuencia y tipo de ejercicio realizado.', '2025-06-03', TRUE),
+(4, 4, 'Tecnología en la Educación', 'Impacto de la tecnología en el aprendizaje.', '2025-06-04', TRUE),
+(5, 5, 'Comida Favorita', 'Preferencias gastronómicas de la población.', '2025-06-05', TRUE);
+
+-- Insertar preguntas
+INSERT INTO pregunta (id_pregunta, id_encuesta, texto, tipo) VALUES
+(1, 1, '¿Cuál es tu red social favorita?', 'selección única'),
+(2, 2, '¿Cuántas veces compras en línea al mes?', 'numérico'),
+(3, 3, '¿Cuánto tiempo dedicas al ejercicio diario?', 'texto'),
+(4, 4, '¿Crees que la tecnología mejora el aprendizaje?', 'booleano'),
+(5, 5, '¿Cuál es tu tipo de comida favorita?', 'selección única');
+
+-- Insertar opciones de respuesta
+INSERT INTO opcion_respuesta (id_opcion, id_pregunta, texto) VALUES
+(1, 1, 'Facebook'),
+(2, 1, 'Instagram'),
+(3, 1, 'Twitter'),
+(4, 1, 'TikTok'),
+(5, 5, 'Italiana'),
+(6, 5, 'Mexicana'),
+(7, 5, 'Japonesa'),
+(8, 5, 'Vegetariana');
+
+-- Insertar votos
+INSERT INTO voto (id_voto, id_usuario, id_opcion, fecha_voto) VALUES
+(1, 1, 2, '2025-06-02'), 
+(2, 2, 5, '2025-06-03'), 
+(3, 3, 4, '2025-06-04'), 
+(4, 4, 3, '2025-06-05'), 
+(5, 5, 7, '2025-06-06'); 
+
+
+
 ALTER TABLE encuesta
 
 ADD CONSTRAINT fk_encuesta_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario);
