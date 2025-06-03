@@ -146,25 +146,25 @@ INSERT INTO voto (id_voto, id_usuario, id_opcion, fecha_voto) VALUES
 
 
 ALTER TABLE encuesta
-
-ADD CONSTRAINT fk_encuesta_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario);
+ADD CONSTRAINT fk_encuesta_usuario FOREIGN KEY (id_usuario) 
+REFERENCES usuario(id_usuario) ON DELETE CASCADE;
 
 ALTER TABLE pregunta
-
-ADD CONSTRAINT fk_pregunta_encuesta FOREIGN KEY (id_encuesta) REFERENCES encuesta(id_encuesta);
+ADD CONSTRAINT fk_pregunta_encuesta FOREIGN KEY (id_encuesta) 
+REFERENCES encuesta(id_encuesta) ON DELETE CASCADE;
 
 ALTER TABLE opcion_respuesta
-
-ADD CONSTRAINT fk_opcion_pregunta FOREIGN KEY (id_pregunta) REFERENCES pregunta(id_pregunta);
-
-ALTER TABLE voto
-
-ADD CONSTRAINT fk_voto_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario);
+ADD CONSTRAINT fk_opcion_pregunta FOREIGN KEY (id_pregunta) 
+REFERENCES pregunta(id_pregunta) ON DELETE CASCADE;
 
 ALTER TABLE voto
+ADD CONSTRAINT fk_voto_usuario FOREIGN KEY (id_usuario) 
+REFERENCES usuario(id_usuario) ON DELETE CASCADE;
 
-ADD CONSTRAINT fk_voto_opcion FOREIGN KEY (id_opcion) REFERENCES opcion_respuesta(id_opcion);
+ALTER TABLE voto
+ADD CONSTRAINT fk_voto_opcion FOREIGN KEY (id_opcion) 
+REFERENCES opcion_respuesta(id_opcion) ON DELETE CASCADE;
 
 ALTER TABLE estadistica_encuesta
-
-ADD CONSTRAINT fk_estadistica_encuesta FOREIGN KEY (id_encuesta) REFERENCES encuesta(id_encuesta);
+ADD CONSTRAINT fk_estadistica_encuesta FOREIGN KEY (id_encuesta) 
+REFERENCES encuesta(id_encuesta) ON DELETE CASCADE;
