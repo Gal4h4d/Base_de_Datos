@@ -44,3 +44,18 @@ BEGIN
     RAISE NOTICE 'Cursor processing with parameter completed';
 END;
 $$ LANGUAGE plpgsql;
+
+do
+$$
+DECLARE
+    reg_tasks tasks%ROWTYPE;
+    cur_user CURSOR (level_task INT) FOR SELECT * FROM tasks WHERE pid = level_task;
+    nivel INT := 2;
+BEGIN
+    RAISE NOTICE 'Starting cursor processing with parameter';
+    FOR reg_tasks IN cur_user(nivel) LOOP
+        RAISE NOTICE 'nombre tarea: %, Resumen: %', reg_tasks.title, reg_tasks.summary;
+    END LOOP;
+    RAISE NOTICE 'Cursor processing with parameter completed';
+END;
+$$ LANGUAGE plpgsql;
