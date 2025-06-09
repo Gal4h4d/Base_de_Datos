@@ -1,0 +1,9 @@
+[
+  { "nombre": "Juan", "edad": 25, "activo": true, "puntos": 80, "ciudad": "Bogotá" },
+  { "nombre": "María", "edad": 30, "activo": false, "puntos": 95, "ciudad": "Cali" },
+  { "nombre": "Luis", "edad": 22, "activo": true, "puntos": 60, "ciudad": "Medellín" },
+  { "nombre": "Ana", "edad": 28, "activo": false, "puntos": 40, "ciudad": "Bogotá" },
+  { "nombre": "Pedro", "edad": 35, "activo": true, "puntos": 70, "ciudad": "Cali" },
+  { "nombre": "Laura", "edad": 19, "activo": false, "puntos": 30, "ciudad": "Barranquilla" },
+  { "nombre": "Andrés", "edad": 27, "activo": true, "puntos": 90, "ciudad": "Medellín" }
+]
