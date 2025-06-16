@@ -1,8 +1,4 @@
-# 📘 Guía de Documentos Anidados en MongoDB
-
-Este documento proporciona una guía práctica sobre cómo trabajar con **documentos anidados** en MongoDB utilizando una colección de ejemplo: `pokemons`.
-
----
+# Guía de Documentos Anidados en MongoDB
 
 ## 🔹 a. ¿Qué es un documento anidado?
 
@@ -131,4 +127,3 @@ db.pokemons.find(
 
 ---
 
-> ✍️ Esta guía es útil para consultas, inserciones, proyecciones y actualizaciones sobre documentos con estructuras complejas en MongoDB.
